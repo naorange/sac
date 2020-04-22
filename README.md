@@ -25,12 +25,13 @@
 예술의 전당, 음악회 표 예매 Portal
 
 기능적 요구사항
-1.공연자가 공연을 등록한다.
+1.공연자(예술의전당)가 공연을 등록한다.
 2.고객이 공연 표를 예매한다.
 3.고객이 공연 표를 취소할 수 있다.
 4.공연자가 공연을 취소한다.
 5.공연자가 공연을 취소하면, 공연 표 예매를 취소한다.
 6.공연 표가 예매되거나 취소되면 참가인원수를 변경한다.
+7.고객이 표 예매 상황을 조회한다.
 
 비기능적 요구사항
 1. 장애격리
@@ -105,55 +106,49 @@
 
 
 
-### 조직 및 요구사항 도출 도출
-![image](https://user-images.githubusercontent.com/48303857/79729383-5cfa6400-832a-11ea-89b6-53eca4de1ab8.jpeg)
+### 조직 및 요구사항 도출 
+조직: 고객, 공연사(예술의전당)
+
+기능적 요구사항
+1.공연자가 공연을 등록한다.
+2.고객이 공연 표를 예매한다.
+3.고객이 공연 표를 취소할 수 있다.
+4.공연자가 공연을 취소한다.
+5.공연자가 공연을 취소하면, 공연 표 예매를 취소한다.
+6.공연 표가 예매되거나 취소되면 참가인원수를 변경한다.
+7.고객이 표 예매 상황을 조회한다.
+
+비기능적 요구사항
+1. 장애격리
+    1. 강의 관리 기능이 수행되지 않더라도 수강신청은 365일 24시간 받을 수 있어야 한다  Async (event-driven), Eventual Consistency
+
+
 
 ### 이벤트도출, 액터 커맨드 부착, 어그리게잇, 바운디드 컨텍스트로 묶기
 ![image](https://user-images.githubusercontent.com/48303857/79729452-74d1e800-832a-11ea-9b08-0d2807c69a28.jpeg)
 
     - 도메인 서열 분리 
-        - Core Domain:  수강신청(front), 강의관리 : 핵심 서비스이며, 연간 Up-time SLA 수준을 99.999% 목표, 배포주기는 수강신청의 경우 1주일 1회 미만, 강의관리의 경우 1개월 1회 미만
+        - Core Domain:  표예매(front), 공연관리 : 핵심 서비스이며, 연간 Up-time SLA 수준을 99.999% 목표, 배포주기는 표예매의 경우 1주일 1회 미만, 공연관리의 경우 1개월 1회 미만
         - Supporting Domain:   Dashboard : 경쟁력을 내기위한 서비스이며, SLA 수준은 연간 60% 이상 uptime 목표, 배포주기는 각 팀의 자율이나 표준 스프린트 주기가 1주일 이므로 1주일 1회 이상을 기준으로 함.
-        - General Domain:   결제 : 결제서비스로 3rd Party 외부 서비스를 사용하는 것이 경쟁력이 높음 (핑크색으로 이후 전환할 예정)
+         
 
-### 폴리시 부착
+### 폴리시 도출
 
-![image](https://user-images.githubusercontent.com/48303857/79729649-b4003900-832a-11ea-875f-c0e8dfc6ccb4.jpeg)
+### 폴리시와 컨텍스트 매핑 (Pub/Sub)
 
-### 폴리시의 이동과 컨텍스트 매핑 (Blue는 Pub/Sub, Orange는 Req/Resp)
+### 기능적/비기능적 요구사항을 커버하는지 검증
 
-![image](https://user-images.githubusercontent.com/48303857/79729705-c67a7280-832a-11ea-828f-fc0cc5510e17.jpeg)
+    - 공연자가 공연을 등록한다. (ok)
+    - 고객이 공연 표를 예매한다.  (ok)
+    - 고객이 공연 표를 취소할 수 있다.  (ok)
+    - 공연자가 공연을 취소한다.  (ok)
+    - 공연자가 공연을 취소하면, 공연 표 예매 시스템에 전달된다.  (ok - event driven)
+    - 공연 표가 예매되거나 취소되면 공연 참가인원수를 변경한다. (ok - event driven)
+    - 고객이 표 예매 상황을 조회한다.(view)
 
-![image](https://user-images.githubusercontent.com/48303857/79729768-d72ae880-832a-11ea-9900-8e0e0e281d87.jpeg)
+### 요구사항을 커버하도록 모델링됨
 
-### 완성된 1차 모형
-
-![image](https://user-images.githubusercontent.com/48303857/79729946-15c0a300-832b-11ea-8247-4e261f22690d.jpeg)
-
-    - View Model 추가
-
-
-### 1차 완성본에 대한 기능적/비기능적 요구사항을 커버하는지 검증
-
-    - 학생이 강의를 선택하여 수강신청 한다 (ok)
-    - 학생이 결제한다 (ok -sync)
-    - 수강신청이 되면 수강신청 내역이 강사의 강의시스템에 전달된다 (ok - event driven)
-    - 학생이 수강신청을 취소한다 (ok)
-    - 수강신청이 취소되면 결제가 취소된다 (ok)
-    - 강사가 강의를 개설한다 (ok)
-    - 강사가 개설된 강의를 취소한다 (ok)
-    - 강사가 강의를 취소하면 학생의 수강신청이 취소된다 (ok)
-    - 학생이 수강신청 내용을 조회한다 (view)
-    - 강사가 강의수강 인원을 조회한다 (view)
-
-### 1차 모형에서 요구사항을 커버하도록 모델링됨
-
-![image](https://user-images.githubusercontent.com/48303857/79814397-17d14300-83b9-11ea-8c7e-3517658dff13.png)
-
-
-    - 강의 신청 시 결제처리 : 서비스는 강의를 제공하는 강사의 이익을 제공해야 하기 때문에 수강신청시 결제처리에 대해서는  Request-Response 방식 처리한다.
-    - 강의 관리 기능은 서비스 제공의 측면이 강하며, 한 번 등록 시 여러명이 학생들이 수강신청을 하기 때문에 수강신청(Front)에 대해 강의관리 서비스는 Async (event-driven), Eventual Consistency 방식으로 처리한다.
-    - 결제시스템이 과중되면 사용자를 잠시동안 받지 않고 결제를 잠시후에 하도록 유도한다 Circuit breaker를 사용하여 
+    - 공연 관리 기능은 서비스 제공의 측면이 강하며, 한 번 등록 시 여러명의 고객이 표 예매를 하기 때문에 표예매(Front)에 대해 공연관리 서비스는 Async (event-driven), Eventual Consistency 방식으로 처리한다.
     - 학생이 강의관리에서 확인할 수 있는 수강신청내용을 수강신청시스템(프론트엔드)에서 확인할 수 있어야 한다 CQRS
     - 결제를 제외한 나머지 inter-microservice 트랜잭션: 모든 이벤트에 대해 데이터 일관성의 시점이 크리티컬하지 않은 모든 경우가 대부분이라 판단, Eventual Consistency 를 기본으로 채택함.    
 
@@ -164,7 +159,7 @@
 
 
     - Chris Richardson, MSA Patterns 참고하여 Inbound adaptor와 Outbound adaptor를 구분함
-    - 호출관계에서 PubSub 과 Req/Resp 를 구분함
+    - 호출관계에서 PubSub 구현함
     - 서브 도메인과 바운디드 컨텍스트의 분리:  각 팀의 KPI 별로 아래와 같이 관심 구현 스토리를 나눠가짐
 
 
@@ -173,13 +168,13 @@
 분석/설계 단계에서 도출된 헥사고날 아키텍처에 따라, 각 BC별로 대변되는 마이크로 서비스들을 스프링부트로 구현하였다. 구현한 각 서비스를 로컬에서 실행하는 방법은 아래와 같다 (각자의 포트넘버는 8081 ~ 808n 이다)
 
 ```
-cd courseRegistrationSystem
+cd ticketBook
 mvn spring-boot:run
 
-cd paymentSystem
+cd concert
 mvn spring-boot:run 
 
-cd lectureSystem
+cd dashboard
 mvn spring-boot:run  
 ```
 
